@@ -1987,7 +1987,7 @@ function buildVerbBubble() {
           ds.data.forEach((pt, idx) => {
             const el = meta.data[idx]; if (!el) return;
             if (pt.r < 13) return;
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#000';
             ctx.font = `600 ${Math.min(11, pt.r * 0.45)}px Inter`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             const { x, y } = el.getProps(['x','y']);
