@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gaining Access: A Researcher's Decision Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f1ea;
+    --bg-card: #fdfbf6;
+    --ink: #1f1d1a;
+    --ink-soft: #4a463f;
+    --ink-muted: #7a7468;
+    --rule: #d9d1c1;
+    --accent: #0f4d4a;
+    --accent-soft: #d4e3e1;
+    --accent-deep: #0a3331;
+    --correct: #2d5a3d;
+    --correct-bg: #e1ede4;
+    --partial: #8a6a1e;
+    --partial-bg: #f3ebd6;
+    --weak: #8a3a2e;
+    --weak-bg: #f1dcd6;
+    --shadow: 0 1px 2px rgba(31,29,26,0.04), 0 8px 24px rgba(31,29,26,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 17px;
+    padding: 24px 16px;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(28px, 4.5vw, 38px);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144;
+  }
+
+  .subhead {
+    margin-top: 8px;
+    color: var(--ink-muted);
+    font-size: 15px;
+    font-style: italic;
+  }
+
+  .progress-wrap {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 2px;
+    background: var(--rule);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .progress-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .scene {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .scene.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .scene-number {
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(22px, 3.2vw, 28px);
+    line-height: 1.2;
+    margin-bottom: 16px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .narrative {
+    background: var(--bg-card);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    margin-bottom: 26px;
+    font-size: 16px;
+    color: var(--ink-soft);
+  }
+
+  .narrative p + p { margin-top: 10px; }
+
+  .prompt {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 17px;
+    margin-bottom: 18px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .option {
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px 18px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .option:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: #fff;
+    transform: translateX(2px);
+  }
+
+  .option:disabled { cursor: default; }
+
+  .option-letter {
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 17px;
+    flex-shrink: 0;
+    width: 18px;
+  }
+
+  .option.selected.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+  }
+  .option.selected.correct .option-letter { color: var(--correct); }
+
+  .option.selected.partial {
+    border-color: var(--partial);
+    background: var(--partial-bg);
+  }
+  .option.selected.partial .option-letter { color: var(--partial); }
+
+  .option.selected.weak {
+    border-color: var(--weak);
+    background: var(--weak-bg);
+  }
+  .option.selected.weak .option-letter { color: var(--weak); }
+
+  .option.dimmed {
+    opacity: 0.45;
+  }
+
+  .feedback {
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .feedback.show { display: block; }
+
+  .feedback-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+
+  .tag-correct { background: var(--correct); color: #fff; }
+  .tag-partial { background: var(--partial); color: #fff; }
+  .tag-weak { background: var(--weak); color: #fff; }
+
+  .feedback-text {
+    color: var(--ink-soft);
+    font-size: 15.5px;
+  }
+
+  .feedback-text strong { color: var(--ink); font-weight: 600; }
+
+  .feedback-concept {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  .btn {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px 22px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.18s ease;
+    display: none;
+  }
+
+  .btn.show { display: inline-block; }
+
+  .btn:hover { background: var(--accent-deep); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    margin-right: 10px;
+  }
+
+  .btn-secondary:hover {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+  }
+
+  /* Summary scene */
+  .summary-score {
+    text-align: center;
+    padding: 28px 20px;
+    margin-bottom: 28px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+
+  .score-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
+
+  .score-number {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 64px;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .score-out-of {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+
+  .score-verdict {
+    margin-top: 12px;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 16px;
+  }
+
+  .summary-map {
+    margin-bottom: 24px;
+  }
+
+  .summary-map h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 20px;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+
+  .map-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .map-item:last-child { border-bottom: none; }
+
+  .map-stage {
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .map-concept {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .map-concept strong { color: var(--ink); font-weight: 600; }
+
+  .map-result {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .closing {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-size: 15px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  footer {
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--ink-muted);
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 560px) {
+    body { padding: 18px 14px; font-size: 16px; }
+    .narrative, .feedback { padding: 16px; }
+    .option { padding: 12px 14px; font-size: 15px; }
+    .actions { flex-direction: column-reverse; gap: 8px; }
+    .btn { width: 100%; }
+    .btn-secondary { margin-right: 0; }
+    .map-item { grid-template-columns: 1fr; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="eyebrow">Interactive Activity</div>
+    <h1>Gaining Access: A Researcher's Decision Path</h1>
+    <p class="subhead">Five decisions. One research project. What happens when theory meets a gatekeeper.</p>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="progress-label" id="progressLabel">Stage 1 of 5</div>
+    </div>
+  </header>
+
+  <!-- SCENE 1 -->
+  <section class="scene active" data-scene="1">
+    <div class="scene-number">Stage One</div>
+    <h2>An Informal Yes</h2>
+    <div class="narrative">
+      <p>You're a doctoral student studying burnout among ICU nurses. You also work full-time at Regional Medical Center, in the IT department, where your day job has nothing to do with critical care. Your dissertation calls for semi-structured interviews with 15 to 20 ICU nurses at this hospital. IRB review is pending. Interview protocol is drafted.</p>
+      <p>Three weeks ago, at a hospital recognition dinner, you mentioned the study to the Chief Medical Officer in passing. She said, <em>"Oh, that sounds great, definitely do it here."</em> Nothing has happened since. No follow-up email, no formal approval, no introduction to anyone in the ICU.</p>
+      <p>You have a verbal blessing that may or may not still exist. You don't yet have access to a single nurse.</p>
+    </div>
+    <p class="prompt">What do you do first?</p>
+    <div class="options" id="opts1">
+      <button class="option" data-key="A"><span class="option-letter">A.</span><span>Email the ICU nurse manager and tell her the CMO has approved your study. Ask her to schedule you with willing nurses.</span></button>
+      <button class="option" data-key="B"><span class="option-letter">B.</span><span>Email the CMO with a one-page summary of your study and request written confirmation. Only after that's in hand, contact the ICU nurse manager directly with a formal request.</span></button>
+      <button class="option" data-key="C"><span class="option-letter">C.</span><span>Approach the ICU nurse manager directly as if the CMO conversation never happened, treating yourself as any external researcher would.</span></button>
+      <button class="option" data-key="D"><span class="option-letter">D.</span><span>Ask a colleague who works in the ICU to introduce you informally to a few willing nurses. You already have approval, so a formal sign-off from the nurse manager isn't really necessary.</span></button>
+    </div>
+    <div class="feedback" id="fb1"></div>
+    <div class="actions"><button class="btn" id="next1">Continue →</button></div>
+  </section>
+
+  <!-- SCENE 2 -->
+  <section class="scene" data-scene="2">
+    <div class="scene-number">Stage Two</div>
+    <h2>Framing the Request</h2>
+    <div class="narrative">
+      <p>You have written confirmation from the CMO. Now you need to write to the ICU nurse manager, Dr. Hernandez, whom you've never spoken with. You're aware she's heard about your study from the CMO and is expecting an email.</p>
+      <p>The opening line will set the tone. You're also conscious that you both work for the same employer, which cuts both ways. She might be more receptive, or more skeptical of a coworker asking favors.</p>
+    </div>
+    <p class="prompt">Which framing do you use?</p>
+    <div class="options" id="opts2">
+      <button class="option" data-key="A"><span class="option-letter">A.</span><span>"I'm conducting research on burnout failures in critical care and want to interview your staff about what's going wrong."</span></button>
+      <button class="option" data-key="B"><span class="option-letter">B.</span><span>"I'd like to learn from your nurses' experiences with workplace pressures and the strategies they use to sustain themselves. I'd welcome a conversation with anyone willing."</span></button>
+      <button class="option" data-key="C"><span class="option-letter">C.</span><span>"I need to study why nurses are quitting and what this hospital is doing wrong on retention."</span></button>
+      <button class="option" data-key="D"><span class="option-letter">D.</span><span>"I'm doing a quick five-minute survey on burnout. It won't take any time at all and I just need a handful of responses."</span></button>
+    </div>
+    <div class="feedback" id="fb2"></div>
+    <div class="actions"><button class="btn" id="next2">Continue →</button></div>
+  </section>
+
+  <!-- SCENE 3 -->
+  <section class="scene" data-scene="3">
+    <div class="scene-number">Stage Three</div>
+    <h2>The Gatekeeper's Hesitation</h2>
+    <div class="narrative">
+      <p>Dr. Hernandez replies the next morning:</p>
+      <p><em>"Thanks for the email. I'll be honest with you. I heard about your study from the CMO last week, before I heard from you, and I was a little surprised. Three other burnout studies have asked for access in the last year and we declined all of them. The unit is tired of being a research site. What would you do differently?"</em></p>
+    </div>
+    <p class="prompt">How do you respond?</p>
+    <div class="options" id="opts3">
+      <button class="option" data-key="A"><span class="option-letter">A.</span><span>Acknowledge you should have reached out to her before the CMO knew anything about it. Reassure her that confidentiality and anonymity are guaranteed, and offer a tailored two-page summary of insights designed for her leadership team in exchange for access.</span></button>
+      <button class="option" data-key="B"><span class="option-letter">B.</span><span>Acknowledge that burnout is sensitive, but argue that the public deserves to know what's happening inside hospitals.</span></button>
+      <button class="option" data-key="C"><span class="option-letter">C.</span><span>Offer to change your topic to something less sensitive if it would help her approve the request.</span></button>
+      <button class="option" data-key="D"><span class="option-letter">D.</span><span>Insist it would only take an hour with each nurse, so the burden on the unit is minimal.</span></button>
+    </div>
+    <div class="feedback" id="fb3"></div>
+    <div class="actions"><button class="btn" id="next3">Continue →</button></div>
+  </section>
+
+  <!-- SCENE 4 -->
+  <section class="scene" data-scene="4">
+    <div class="scene-number">Stage Four</div>
+    <h2>What You Ask For</h2>
+    <div class="narrative">
+      <p>Dr. Hernandez is warming up. She asks what exactly you want from her unit.</p>
+      <p>You actually want three things, eventually: interviews with 8 nurses, a focus group, and permission to observe shift handoffs. But you have no rapport yet.</p>
+    </div>
+    <p class="prompt">What do you ask for in this reply?</p>
+    <div class="options" id="opts4">
+      <button class="option" data-key="A"><span class="option-letter">A.</span><span>Lay out all three components at once so she has a complete picture of what's required.</span></button>
+      <button class="option" data-key="B"><span class="option-letter">B.</span><span>Ask only for the interviews now. Plan to revisit the focus group and observation later, once you've built a track record on the unit.</span></button>
+      <button class="option" data-key="C"><span class="option-letter">C.</span><span>Withhold the focus group and observation entirely. Mention them only after you've finished the interviews, without flagging them in your IRB application.</span></button>
+      <button class="option" data-key="D"><span class="option-letter">D.</span><span>Ask only for the observation first, on the grounds that it's the least demanding for nurses.</span></button>
+    </div>
+    <div class="feedback" id="fb4"></div>
+    <div class="actions"><button class="btn" id="next4">Continue →</button></div>
+  </section>
+
+  <!-- SCENE 5 -->
+  <section class="scene" data-scene="5">
+    <div class="scene-number">Stage Five</div>
+    <h2>The Nurses Themselves</h2>
+    <div class="narrative">
+      <p>You're approved. Dr. Hernandez sent an email introducing you to the ICU team. You arrive on your first scheduled day, badge in hand, IRB letter in your bag.</p>
+      <p>Two of the eight nurses on the list look uneasy when you introduce yourself. One says, <em>"I've seen you in the cafeteria before, right? Don't you work in IT? I didn't really know what this was about. We just got the email."</em> The other nurse doesn't say anything but doesn't make eye contact.</p>
+    </div>
+    <p class="prompt">What do you do next?</p>
+    <div class="options" id="opts5">
+      <button class="option" data-key="A"><span class="option-letter">A.</span><span>Begin scheduling interviews immediately. The nurse manager approved this and the email already went out.</span></button>
+      <button class="option" data-key="B"><span class="option-letter">B.</span><span>Email all eight nurses a four-page consent form with the full study protocol attached and wait for replies.</span></button>
+      <button class="option" data-key="C"><span class="option-letter">C.</span><span>Ask Dr. Hernandez if you can briefly attend a shift-change meeting to introduce yourself in plain language, explain your researcher role (separate from your IT job), answer questions, and only then request consent from individuals.</span></button>
+      <button class="option" data-key="D"><span class="option-letter">D.</span><span>Set up at the nurses' station with consent forms and wait for nurses to come to you when they have a moment.</span></button>
+    </div>
+    <div class="feedback" id="fb5"></div>
+    <div class="actions"><button class="btn" id="next5">See Your Summary →</button></div>
+  </section>
+
+  <!-- SUMMARY SCENE -->
+  <section class="scene" data-scene="6">
+    <div class="scene-number">Debrief</div>
+    <h2>Your Access Strategy</h2>
+
+    <div class="summary-score">
+      <div class="score-label">Credibility & Access Score</div>
+      <div>
+        <span class="score-number" id="finalScore">0</span><span class="score-out-of"> / 10</span>
+      </div>
+      <div class="score-verdict" id="scoreVerdict"></div>
+    </div>
+
+    <div class="summary-map">
+      <h3>Your decisions, mapped to the framework</h3>
+      <div id="mapList"></div>
+    </div>
+
+    <div class="closing">
+      <p>Working at the organization you want to study is both an advantage and a trap. It opens doors that outsiders can't open (the CMO's casual blessing) and it makes every misstep more public, every gatekeeper more suspicious of being short-circuited, and every nurse more aware that you are simultaneously a coworker and a researcher. Access is rarely won or lost in a single move. It's a sequence of judgment calls, each informed by what Saunders and colleagues call the three levels of access (physical or virtual, continuing, and cognitive) and theories about why people choose to participate. The choices you missed above are the ones worth rereading.</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn show btn-secondary" id="restart">Start Over</button>
+    </div>
+  </section>
+
+  <footer>An applied scenario for research methods coursework.</footer>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Feedback data for each scene and option
+  const FEEDBACK = {
+    1: {
+      best: 'B',
+      A: {
+        level: 'weak', points: 0,
+        title: 'Verbal approval is not access.',
+        body: 'The CMO\'s casual remark hasn\'t been formalized and may not survive the moment she\'s actually asked to confirm it. Worse, you\'ve put the nurse manager in a defensive position by announcing her unit has been opened to a study she never agreed to. The chapter is direct: even when approval is granted, it can be overruled at a different level, and you must still negotiate access from the management of the unit itself.',
+        concept: 'Upper-level approval can be retracted or overruled. Physical access to a specific unit must come from that unit\'s own management.'
+      },
+      B: {
+        level: 'correct', points: 2,
+        title: 'Formalize what you have, then earn what you need.',
+        body: 'You\'ve turned a fragile verbal nod into a written commitment, which both protects the project and signals that you\'ve done your homework. Then you approach the actual gatekeeper through legitimate channels rather than over her head. This is the layered, iterative process of physical access the chapter describes.',
+        concept: 'Physical access is granted formally through management. Access is iterative and incremental, not a single event.'
+      },
+      C: {
+        level: 'partial', points: 1,
+        title: 'Respectful, but you\'ve left support on the table.',
+        body: 'You\'ve gone to the right gatekeeper without overplaying your hand, which is good. But you\'ve discarded legitimate institutional support that could have shortened the path. If the CMO later mentions the conversation to the nurse manager and the manager realizes you knew, you\'ll look evasive rather than careful.',
+        concept: 'Senior endorsement, once formalized, is a legitimate asset. Discarding it isn\'t humility — it\'s missed leverage.'
+      },
+      D: {
+        level: 'weak', points: 0,
+        title: 'An end-run around the gatekeeper.',
+        body: 'Using insider relationships to bypass the manager whose unit you want to study is exactly what the chapter warns against. The "approval" you have is not access. The nurse manager will eventually find out and the breach of process will damage your credibility well beyond this one study. There\'s also a research integrity dimension: nurses approached this way may feel pressured by a coworker\'s social ask rather than freely consenting.',
+        concept: 'Working at the organization gives you visibility, not authorization. Cognitive access still requires informed, voluntary consent.'
+      }
+    },
+
+    2: {
+      best: 'B',
+      A: {
+        level: 'weak', points: 0,
+        title: 'The word "failures" will shut the conversation down.',
+        body: 'Framing the unit as the site of failure asks an organization to volunteer for its own bad press. Saunders et al. specifically warn against language that signals poor performance or blame.',
+        concept: 'Avoid framing that concentrates on failure or poor performance, even if your underlying questions are critical.'
+      },
+      B: {
+        level: 'correct', points: 2,
+        title: 'Invitational language opens doors.',
+        body: 'Buchanan and colleagues recommend "learn from your experience" and "conversation" in place of more clinical research terminology. You\'ve also given the gatekeeper something to be proud of (resilience strategies) without pretending the topic isn\'t hard.',
+        concept: 'Suitable language and a positive frame increase salience without distorting the research.'
+      },
+      C: {
+        level: 'weak', points: 0,
+        title: 'Accusatory framing rarely survives the inbox.',
+        body: '"What this hospital is doing wrong" is exactly the kind of language the reading warns against. It signals threat, invites defensiveness, and makes refusal easy. As an insider, you also implicate yourself in the criticism, which makes the framing even harder to recover from.',
+        concept: 'Organizations are unlikely to grant access for research framed around their own poor performance.'
+      },
+      D: {
+        level: 'weak', points: 0,
+        title: 'Don\'t understate the burden.',
+        body: 'If interviews actually take 45 minutes, claiming "five minutes" damages your credibility the moment it becomes obvious. The reading is explicit: being unrealistic about time is one of the fastest ways to alienate participants.',
+        concept: 'Honest, accurate framing protects credibility. False minimization is short-term gain and long-term harm.'
+      }
+    },
+
+    3: {
+      best: 'A',
+      A: {
+        level: 'correct', points: 2,
+        title: 'Own the misstep, address the concern, offer something in return.',
+        body: 'You\'ve named the procedural awkwardness directly (which she already noticed), addressed the two concerns that matter most (confidentiality and the risk of looking bad), and offered a benefit designed specifically for her leadership team rather than a copy of your dissertation. That\'s social exchange theory in operation alongside professional humility.',
+        concept: 'Potential participants and gatekeepers weigh benefits against costs. Naming what they already see, and offering something useful in return, are two of the strongest levers.'
+      },
+      B: {
+        level: 'weak', points: 0,
+        title: 'Invoking "the public" is a confrontation, not a reassurance.',
+        body: 'You\'ve told her the research could expose the unit and that she should approve it anyway. That guarantees refusal.',
+        concept: 'Gatekeepers refuse access when they perceive threat. Acknowledging concern is required before any persuasion.'
+      },
+      C: {
+        level: 'weak', points: 0,
+        title: 'Changing the topic to gain access undermines the research.',
+        body: 'You can adjust framing, but bending the research question to win access defeats the purpose. It\'s also ethically problematic because what you describe to the gatekeeper would no longer match your actual study.',
+        concept: 'The chapter is explicit: be clear about your purpose. Don\'t mislead to gain entry.'
+      },
+      D: {
+        level: 'partial', points: 1,
+        title: 'Minimizing time is a partial answer to a different concern.',
+        body: 'You\'ve addressed the resource concern but not the sensitivity concern, which is what she actually raised. And "an hour with each nurse" understates the cumulative burden on the unit.',
+        concept: 'Match your response to the concern raised. Resource concerns and sensitivity concerns require different reassurances.'
+      }
+    },
+
+    4: {
+      best: 'B',
+      A: {
+        level: 'partial', points: 1,
+        title: 'Full transparency, full risk.',
+        body: 'Disclosing everything is ethically clean but tactically heavy. A wide-ranging request at the start gives the gatekeeper a lot to refuse at once. The reading recommends starting smaller and building.',
+        concept: 'Incremental access reduces the size of the initial ask and lets you build credibility before requesting more.'
+      },
+      B: {
+        level: 'correct', points: 2,
+        title: 'Build access incrementally.',
+        body: 'You\'ve scoped the first ask to something manageable while keeping the door open for the focus group and observation. Once you\'ve delivered interviews without incident, you\'ll have evidence to support the larger request, and the gatekeeper will know you.',
+        concept: 'Saunders et al. describe access as iterative. Establish credibility on a smaller component, then expand.'
+      },
+      C: {
+        level: 'weak', points: 0,
+        title: 'Hiding components is unethical and risky.',
+        body: 'Withholding components you intend to pursue, and leaving them out of your IRB application, is a research integrity problem. The chapter notes that incremental strategies can be argued to be unethical when researchers conceal their full access requirements.',
+        concept: 'Incremental access is legitimate. Concealment of intent is not.'
+      },
+      D: {
+        level: 'partial', points: 1,
+        title: 'Wrong component first.',
+        body: 'Observation is often the most intrusive form of data collection, not the least. Asking to watch nurses work before they know you is more demanding of cognitive access, not less. Interviews build rapport better as a first step.',
+        concept: 'Intrusive methods require more cognitive access, not less. Sequence your asks accordingly.'
+      }
+    },
+
+    5: {
+      best: 'C',
+      A: {
+        level: 'weak', points: 0,
+        title: 'Physical access is not consent.',
+        body: 'You have permission from the manager to be in the unit. You do not yet have consent from individual nurses. Beginning interviews without addressing their uncertainty conflates the two and violates voluntary participation.',
+        concept: 'Physical access is granted formally. Cognitive access must be earned from each participant.'
+      },
+      B: {
+        level: 'partial', points: 1,
+        title: 'Documentation alone is not rapport.',
+        body: 'Sending a long consent form doesn\'t address what the nurse just told you: she didn\'t know what this was about. A four-page document delivered cold is unlikely to build the trust you need.',
+        concept: 'Cognitive access requires the participants\' acceptance and trust, not just procedural compliance.'
+      },
+      C: {
+        level: 'correct', points: 2,
+        title: 'Repeat the request, in person, in plain language.',
+        body: 'You\'re doing for the nurses what you did for the manager: explaining who you are in this researcher role (which is separate from your IT job), why you\'re here, and what participation involves, in language that fits the audience. Then asking for consent. The nurse in the cafeteria scenario above is signaling exactly this — she knows you as a coworker, not yet as a researcher, and the two are not interchangeable.',
+        concept: 'Cognitive access is its own process. Familiarity is not consent. Gaining cognitive access usually means repeating much of the work you did to gain entry.'
+      },
+      D: {
+        level: 'weak', points: 0,
+        title: 'Waiting passively at the station puts nurses on the spot.',
+        body: 'Approaching the researcher in a public station, mid-shift, with no private context, is exactly the kind of friction that produces non-response. Leverage-saliency theory predicts that ambiguous, awkward requests get declined.',
+        concept: 'How a request is presented shapes the response. Design the moment of the request, don\'t leave it to chance.'
+      }
+    }
+  };
+
+  const VERDICTS = {
+    10: 'You navigated every stage as the reading recommends. Strong work.',
+    9: 'You navigated every stage as the reading recommends. Strong work.',
+    8: 'A solid strategy with one slip. Reread the section tied to the missed item.',
+    7: 'A solid strategy with one slip. Reread the section tied to the missed item.',
+    6: 'A workable approach but with gaps. Several decisions need the framework applied more carefully.',
+    5: 'A workable approach but with gaps. Several decisions need the framework applied more carefully.',
+    4: 'Several choices ran counter to the chapter\'s guidance. The summary above shows where to focus.',
+    3: 'Several choices ran counter to the chapter\'s guidance. The summary above shows where to focus.',
+    2: 'Most decisions worked against gaining access. A careful reread of Section 6.4 is in order.',
+    1: 'Most decisions worked against gaining access. A careful reread of Section 6.4 is in order.',
+    0: 'Most decisions worked against gaining access. A careful reread of Section 6.4 is in order.'
+  };
+
+  const STAGE_CONCEPTS = {
+    1: 'Insider status & formalizing approval',
+    2: 'Suitable language & framing',
+    3: 'Social exchange & addressing concerns',
+    4: 'Incremental access',
+    5: 'Cognitive access from participants'
+  };
+
+  const userChoices = {};
+
+  // Wire up each scene
+  for (let i = 1; i <= 5; i++) {
+    const scene = document.querySelector(`[data-scene="${i}"]`);
+    const optionsContainer = document.getElementById(`opts${i}`);
+    const feedbackEl = document.getElementById(`fb${i}`);
+    const nextBtn = document.getElementById(`next${i}`);
+
+    optionsContainer.querySelectorAll('.option').forEach(opt => {
+      opt.addEventListener('click', () => handleChoice(i, opt.dataset.key));
+    });
+
+    nextBtn.addEventListener('click', () => goToScene(i + 1));
+  }
+
+  document.getElementById('restart').addEventListener('click', restart);
+
+  function handleChoice(sceneNum, key) {
+    if (userChoices[sceneNum]) return; // already answered
+
+    const data = FEEDBACK[sceneNum];
+    const result = data[key];
+    userChoices[sceneNum] = { key, result };
+
+    const optionsContainer = document.getElementById(`opts${sceneNum}`);
+    optionsContainer.querySelectorAll('.option').forEach(opt => {
+      opt.disabled = true;
+      if (opt.dataset.key === key) {
+        opt.classList.add('selected', result.level);
+      } else {
+        opt.classList.add('dimmed');
+      }
+    });
+
+    const feedbackEl = document.getElementById(`fb${sceneNum}`);
+    const tagClass = `tag-${result.level}`;
+    const tagText = result.level === 'correct' ? 'Strong choice' :
+                    result.level === 'partial' ? 'Partial credit' : 'Reconsider';
+
+    feedbackEl.innerHTML = `
+      <span class="feedback-tag ${tagClass}">${tagText}</span>
+      <div class="feedback-text"><strong>${result.title}</strong> ${result.body}</div>
+      <div class="feedback-concept">${result.concept}</div>
+    `;
+    feedbackEl.classList.add('show');
+
+    document.getElementById(`next${sceneNum}`).classList.add('show');
+  }
+
+  function goToScene(num) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    const next = document.querySelector(`[data-scene="${num}"]`);
+    if (next) {
+      next.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      updateProgress(num);
+      if (num === 6) buildSummary();
+    }
+  }
+
+  function updateProgress(num) {
+    const bar = document.getElementById('progressBar');
+    const label = document.getElementById('progressLabel');
+    if (num <= 5) {
+      bar.style.transform = `scaleX(${num / 5})`;
+      label.textContent = `Stage ${num} of 5`;
+    } else {
+      bar.style.transform = 'scaleX(1)';
+      label.textContent = 'Debrief';
+    }
+  }
+
+  function buildSummary() {
+    let total = 0;
+    const mapList = document.getElementById('mapList');
+    mapList.innerHTML = '';
+
+    for (let i = 1; i <= 5; i++) {
+      const choice = userChoices[i];
+      if (!choice) continue;
+      total += choice.result.points;
+
+      const resultClass = `tag-${choice.result.level}`;
+      const resultLabel = choice.result.level === 'correct' ? 'Strong' :
+                          choice.result.level === 'partial' ? 'Partial' : 'Missed';
+
+      const item = document.createElement('div');
+      item.className = 'map-item';
+      item.innerHTML = `
+        <div class="map-stage">Stage ${i}</div>
+        <div class="map-concept"><strong>${STAGE_CONCEPTS[i]}.</strong> You chose ${choice.key}. ${choice.result.title}</div>
+        <div class="map-result ${resultClass}">${resultLabel}</div>
+      `;
+      mapList.appendChild(item);
+    }
+
+    document.getElementById('finalScore').textContent = total;
+    document.getElementById('scoreVerdict').textContent = VERDICTS[total] || '';
+  }
+
+  function restart() {
+    for (const k in userChoices) delete userChoices[k];
+    for (let i = 1; i <= 5; i++) {
+      const opts = document.getElementById(`opts${i}`);
+      opts.querySelectorAll('.option').forEach(opt => {
+        opt.disabled = false;
+        opt.classList.remove('selected', 'correct', 'partial', 'weak', 'dimmed');
+      });
+      const fb = document.getElementById(`fb${i}`);
+      fb.classList.remove('show');
+      fb.innerHTML = '';
+      document.getElementById(`next${i}`).classList.remove('show');
+    }
+    goToScene(1);
+  }
+
+  updateProgress(1);
+})();
+</script>
+
+</body>
+</html>
