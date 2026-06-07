@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Text, Three Contexts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3ecdf;--paper-2:#ece2d0;--ink:#23201a;--ink-soft:#5b5347;
+    --rule:#cdc1aa;--ochre:#a7682b;--ochre-soft:#c89154;--teal:#2f5d57;
+    --alarm:#9d3b2f;--card:#fbf7ee;
+    --shadow:0 1px 0 rgba(35,32,26,.04),0 14px 30px -18px rgba(35,32,26,.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(1200px 600px at 80% -10%,rgba(200,145,84,.10),transparent 60%),var(--paper);
+    color:var(--ink);font-family:"Spectral",Georgia,serif;font-size:20px;line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:42px 26px 90px;}
+  .kicker{font-family:"Spectral",serif;text-transform:uppercase;letter-spacing:.22em;
+    font-size:14px;font-weight:600;color:var(--ochre);margin:0 0 14px;}
+  h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(30px,5.4vw,46px);
+    line-height:1.05;letter-spacing:-.01em;margin:0 0 18px;}
+  h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(23px,3.6vw,30px);
+    line-height:1.12;margin:0 0 14px;}
+  p{margin:0 0 16px;}
+  .lede{font-size:23px;color:var(--ink-soft);}
+  .step-flag{font-family:"Spectral",serif;font-size:14px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--ink-soft);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+  .step-flag::after{content:"";flex:1;height:1px;background:var(--rule);}
+  .phase{display:none;animation:rise .5s ease both;}
+  .phase.active{display:block;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  .btn{font-family:"Spectral",serif;font-size:18px;font-weight:600;background:var(--ink);
+    color:var(--paper);border:none;border-radius:2px;padding:13px 22px;cursor:pointer;
+    letter-spacing:.02em;transition:transform .15s ease,background .2s ease;}
+  .btn:hover{background:#000;transform:translateY(-1px);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink);}
+  .btn.ghost:hover{background:var(--ink);color:var(--paper);}
+  .actions{margin-top:28px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .note{font-size:16px;color:var(--ink-soft);font-style:italic;}
+
+  /* speech */
+  .speech{background:var(--card);border:1px solid var(--rule);border-radius:4px;
+    box-shadow:var(--shadow);padding:26px 28px;position:relative;}
+  .speech::before{content:"The speech";position:absolute;top:-11px;left:22px;background:var(--ochre);
+    color:var(--paper);font-family:"Spectral",serif;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;font-weight:600;padding:3px 10px;border-radius:2px;}
+  .speech p{font-family:"Fraunces",serif;font-size:22px;line-height:1.5;font-style:italic;margin:0;}
+
+  /* pinned speech during contexts */
+  .pinned{background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;
+    padding:16px 20px;margin-bottom:24px;}
+  .pinned .pl{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);
+    font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;}
+  .pinned .unchanged{color:var(--ochre);}
+  .pinned p{font-family:"Fraunces",serif;font-size:17.5px;line-height:1.45;font-style:italic;margin:0;color:var(--ink-soft);}
+
+  .qcard{background:var(--card);border-left:4px solid var(--teal);padding:18px 20px;
+    border-radius:0 4px 4px 0;margin-bottom:8px;}
+  .qcard .qq{font-family:"Fraunces",serif;font-size:24px;line-height:1.25;margin:0 0 6px;}
+  .qcard .qc{font-size:17px;color:var(--ink-soft);margin:0;}
+
+  .claim{background:var(--card);border:1px solid var(--rule);border-radius:4px;
+    padding:16px 18px;margin-bottom:14px;}
+  .claim .ct{font-size:18.5px;margin-bottom:12px;}
+  .toggle{display:flex;gap:8px;}
+  .tg{font-family:"Spectral",serif;font-size:16px;font-weight:600;background:var(--paper-2);
+    border:1.5px solid var(--rule);color:var(--ink-soft);border-radius:2px;padding:7px 14px;
+    cursor:pointer;transition:all .15s ease;}
+  .tg:hover{border-color:var(--ink-soft);}
+  .tg.sel-ok{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .tg.sel-over{background:var(--alarm);border-color:var(--alarm);color:#fff;}
+  .verdict-tag{display:none;margin-top:11px;padding-top:11px;border-top:1px solid var(--rule);font-size:16px;}
+  .verdict-tag.show{display:block;animation:rise .35s ease both;}
+  .verdict-tag .mark{font-weight:600;letter-spacing:.04em;}
+  .mark.ok{color:var(--teal);}
+  .mark.over{color:var(--alarm);}
+
+  .valid-block{background:var(--paper-2);border:1px dashed var(--rule);border-radius:4px;
+    padding:16px 18px;margin:6px 0 8px;}
+  .valid-block .vq{font-weight:600;margin-bottom:10px;font-size:18px;}
+  .valid-opts{display:flex;gap:8px;flex-wrap:wrap;}
+  .vopt{font-family:"Spectral",serif;font-size:16px;font-weight:500;background:var(--card);
+    border:1.5px solid var(--rule);color:var(--ink-soft);border-radius:2px;padding:8px 13px;cursor:pointer;transition:all .15s ease;}
+  .vopt:hover{border-color:var(--ochre);}
+  .vopt.sel{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+
+  .feedback{background:var(--ink);color:var(--paper);border-radius:4px;padding:22px 24px;
+    margin-top:22px;display:none;animation:rise .4s ease both;}
+  .feedback.show{display:block;}
+  .feedback .ftag{font-size:13.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ochre-soft);
+    font-weight:600;margin-bottom:10px;}
+  .feedback p{margin:0 0 12px;font-size:18px;line-height:1.55;}
+  .feedback p:last-child{margin:0;}
+  .feedback b{color:var(--ochre-soft);}
+
+  /* payoff */
+  .finding{background:var(--card);border:1px solid var(--rule);border-radius:4px;
+    box-shadow:var(--shadow);padding:20px 22px;margin-bottom:16px;}
+  .finding .flabel{font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+    color:var(--teal);margin-bottom:8px;}
+  .finding p{font-family:"Fraunces",serif;font-size:20px;line-height:1.35;margin:0;}
+
+  .dot-rail{display:flex;gap:7px;margin:0 0 30px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--rule);}
+  .dot.on{background:var(--ochre);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dot-rail" id="rail"></div>
+
+  <!-- INTRO -->
+  <section class="phase active" data-phase="intro">
+    <p class="kicker">Qualitative Methods · Content Analysis</p>
+    <h1>One Text, Three Contexts</h1>
+    <p class="lede">In the coding activity, the finding moved when the judgment behind it moved. This time you'll move that judgment on purpose.</p>
+    <p>Krippendorff makes the claim plainly: a speech on economics can be read for what the speaker knows about economics, for the emotions it arouses, or for its political implications — and which reading you get depends on the context you choose to listen within. You're going to hold one short speech still and walk it through three of those contexts.</p>
+    <p>For each, you'll decide what the context lets you infer, what it doesn't, and whether the inference could be validated in principle. Nothing here is graded.</p>
+    <div class="actions"><button class="btn" onclick="go('speech')">Read the speech</button></div>
+  </section>
+
+  <!-- SPEECH -->
+  <section class="phase" data-phase="speech">
+    <div class="step-flag">The text · read it once</div>
+    <h2>A candidate speaks to a town that lost its mill</h2>
+    <div class="speech">
+      <p>"Three years ago this town's mill closed, and four hundred paychecks went with it. The experts told us to be patient — that the market would correct itself, that retraining would fill the gap. Patience is a luxury for people who still have a paycheck. So we stop waiting for trickle-down promises that never reach the ground. We cut the payroll tax for every small employer on Main Street. We tie new infrastructure spending directly to local hiring. And we measure success not by the stock index but by whether the lights are on in the houses on Fourth Street. Prosperity isn't a number in a quarterly report. It's a kitchen table where nobody's afraid of the mail."</p>
+    </div>
+    <p style="margin-top:24px;">Those are the only words you'll analyze. They won't change. What changes, three times over, is the question you bring to them.</p>
+    <div class="actions"><button class="btn" onclick="startContexts()">Enter the first context</button></div>
+  </section>
+
+  <!-- CONTEXT (cycles 3x) -->
+  <section class="phase" data-phase="context">
+    <div class="step-flag" id="ctxFlag">Context 1 of 3</div>
+    <div class="pinned">
+      <div class="pl"><span>The speech</span><span class="unchanged">unchanged</span></div>
+      <p>"…Patience is a luxury for people who still have a paycheck. We cut the payroll tax for every small employer on Main Street… we measure success not by the stock index but by whether the lights are on in the houses on Fourth Street…"</p>
+    </div>
+    <div class="qcard">
+      <p class="qq" id="ctxQ"></p>
+      <p class="qc" id="ctxC"></p>
+    </div>
+    <p style="margin:18px 0 14px;font-size:18px;">For each claim, decide whether this context <i>licenses</i> it as an inference or whether it's an <i>over-reach</i> the text can't carry.</p>
+    <div id="claimList"></div>
+    <div class="valid-block">
+      <div class="vq">Could the finding from this context be validated in principle?</div>
+      <div class="valid-opts" id="validOpts"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="checkBtn" disabled onclick="checkContext()">Check my reading</button>
+      <span class="note" id="ctxProgress"></span>
+    </div>
+    <div class="feedback" id="ctxFeedback"></div>
+    <div class="actions" id="ctxNextWrap" style="display:none;">
+      <button class="btn" id="ctxNext" onclick="nextContext()">Next context</button>
+    </div>
+  </section>
+
+  <!-- PAYOFF -->
+  <section class="phase" data-phase="payoff">
+    <div class="step-flag">Three findings · one text</div>
+    <h2>Same 120 words. Three results.</h2>
+    <p>You read a single, unchanging speech three times. Here is what each context produced — every one of them defensible, none of them reducible to the others.</p>
+    <div class="finding"><div class="flabel">Read for economic competence</div>
+      <p>The speaker commands the vocabulary of economic policy, but the speech cannot establish whether he grasps how those policies would actually work.</p></div>
+    <div class="finding"><div class="flabel">Read for emotional arousal</div>
+      <p>The speech is built to carry an economically insecure audience from fear toward belonging, anchored in the image of a kitchen table free of dread.</p></div>
+    <div class="finding"><div class="flabel">Read for political strategy</div>
+      <p>The speech positions its author as a populist outsider, courting working-class and small-business voters against an expert establishment.</p></div>
+    <p style="margin-top:26px;">None of these findings was sitting <i>in</i> the speech waiting to be extracted. Each one is an inference, and each became available only once you chose a context to read within. Change the context and you change what the text can answer — which is the whole argument of the chapter, made operational.</p>
+    <div class="actions"><button class="btn" onclick="go('close')">One last point</button></div>
+  </section>
+
+  <!-- CLOSE -->
+  <section class="phase" data-phase="close">
+    <div class="step-flag">Why it has to be explicit</div>
+    <h2>Then state your context, or anything goes</h2>
+    <p>If three valid readings can come from one text, a finding means little until the reader knows which context produced it. A claim to have analyzed "the content" of the speech hides the choice that did the real work.</p>
+    <p>So the discipline Krippendorff asks for is simple to state and easy to skip: name the context, name the research question, and make the inference validatable in principle. That's what separates a content analysis from an opinion about a text.</p>
+    <p class="lede" style="margin-top:24px;">Two activities, one idea. The inference lives in the coder's judgment, and that judgment is governed by a context the analyst chooses. Make the context explicit, and the work becomes something another researcher can check.</p>
+    <div class="actions"><button class="btn ghost" onclick="go('intro');resetAll()">Run it again</button></div>
+  </section>
+</div>
+
+<script>
+/* ---------- DATA ---------- */
+const CONTEXTS=[
+ {
+   q:"What does this speech reveal about how well its author understands economics?",
+   c:"Context: treat the text as a window onto the speaker's own economic knowledge.",
+   claims:[
+     {t:"The author can deploy real policy instruments — payroll tax cuts, infrastructure spending tied to hiring — in fluent, recognizable terms.",ok:true,
+      why:"You can observe the economic vocabulary actually used. That's on the page."},
+     {t:"The author understands these mechanisms well enough to know whether the policies would work.",ok:false,
+      why:"Fluent use of a term isn't evidence of grasping it. A speechwriter can supply expert-sounding lines; the text can't reach the mind behind them."},
+     {t:"The author rejects market-correction and trickle-down arguments.",ok:true,
+      why:"The text states this position directly."},
+     {t:"The author understands economics better than the experts he criticizes.",ok:false,
+      why:"The speech gives no comparative basis for ranking the author against the experts."}
+   ],
+   construct:"correlation between how economic concepts are used and the author's actual knowledge",
+   trap:"treating fluent delivery as proof of understanding",
+   feedback:"Your analytical construct here is the <b>correlation between how economic concepts are used and what the author actually knows</b>. The trap is reading fluency as competence: a polished line about payroll tax doesn't tell you the speaker could defend it. The text supports claims about <i>which</i> economic language appears; it can't reach through to the understanding behind it without more.",
+   valid:{ans:"Yes, in principle",why:"You could interview or test the author, or have economists assess the policies. Independent evidence exists."}
+ },
+ {
+   q:"What is this speech likely to make its audience feel?",
+   c:"Context: treat the text as a stimulus acting on the people who hear it.",
+   claims:[
+     {t:"The 'afraid of the mail' and 'kitchen table' images are constructed to move listeners from anxiety toward belonging.",ok:true,
+      why:"You can identify the rhetorical features and the arc they're built to produce."},
+     {t:"A laid-off mill worker hearing this would feel recognized and given hope.",ok:true,
+      why:"With the audience specified, this is the licensed target inference for this context."},
+     {t:"The speech contains hope and anger.",ok:false,
+      why:"This is the container metaphor from the chapter. Emotion isn't in the words; it's aroused in listeners. The speech can't contain a feeling."},
+     {t:"Every listener will respond the same way.",ok:false,
+      why:"Audiences differ. A shareholder might feel attacked by the same lines. You have to specify whose response you mean."}
+   ],
+   construct:"correlation between rhetorical features and audience emotional response",
+   trap:"saying the text 'contains' an emotion, or mistaking your own reaction for the audience's",
+   feedback:"Your construct is the <b>correlation between rhetorical features and audience response</b>. The trap is the container metaphor straight from Krippendorff: the speech doesn't <i>contain</i> hope or anger, and your reaction isn't automatically the audience's. The feeling lives in listeners, which is why this context only yields a finding once you say <i>whose</i> feeling you mean.",
+   valid:{ans:"Yes, in principle",why:"You could survey or otherwise measure the actual audience's response. The inferred phenomenon is observable in someone."}
+ },
+ {
+   q:"What is the author trying to achieve politically?",
+   c:"Context: treat the text as a strategic move within a political field.",
+   claims:[
+     {t:"The author is positioning himself against experts and the establishment.",ok:true,
+      why:"The anti-expert, Main-Street-versus-the-index framing is observable in the text."},
+     {t:"The author is courting working-class and small-business voters.",ok:true,
+      why:"The targeting is visible in who the speech names and elevates."},
+     {t:"The author privately doesn't believe any of this and is only pandering.",ok:false,
+      why:"Private belief is inaccessible from the text. You can read the positioning, not the sincerity."},
+     {t:"This framing will win him the election.",ok:false,
+      why:"That's an outcome, not a strategy, and the speech alone can't carry a prediction about results."}
+   ],
+   construct:"correlation between rhetorical positioning and strategic intent",
+   trap:"confusing the strategy you can read off the text with the private intent you can't — and importing your own politics as the 'obvious' read",
+   feedback:"Your construct is the <b>correlation between rhetorical positioning and strategic intent</b>. The trap is sliding from the strategy the text displays to the intent inside the author's head, and reading your own politics into the gap. Validation here leans on <i>other</i> texts and later actions, not on this speech alone — which is why the answer below is only partial.",
+   valid:{ans:"Only partially",why:"You could compare against other speeches, campaign materials, and later behavior — but private intent stays partly inaccessible, so full validation isn't available."}
+ }
+];
+const VALID_OPTS=["Yes, in principle","Only partially","No"];
+
+/* ---------- STATE ---------- */
+let ci=0;                 // context index
+let picks=[];             // picks[claimIdx] = 'ok' | 'over'
+let validPick=null;
+const PHASES=["intro","speech","context","context","context","payoff","close"];
+
+/* ---------- RAIL ---------- */
+const rail=document.getElementById("rail");
+PHASES.forEach(()=>{const d=document.createElement("div");d.className="dot";rail.appendChild(d);});
+function paintRail(globalIdx){[...rail.children].forEach((d,i)=>d.classList.toggle("on",i<=globalIdx));}
+function railIndexFor(name){
+  if(name==="context") return 2+ci;          // ctxA=2, ctxB=3, ctxC=4
+  return {intro:0,speech:1,payoff:5,close:6}[name];
+}
+
+/* ---------- NAV ---------- */
+function go(name){
+  document.querySelectorAll(".phase").forEach(p=>p.classList.toggle("active",p.dataset.phase===name));
+  paintRail(railIndexFor(name));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ---------- CONTEXTS ---------- */
+function startContexts(){ ci=0; go("context"); renderContext(); }
+
+function renderContext(){
+  const ctx=CONTEXTS[ci];
+  picks=new Array(ctx.claims.length).fill(null);
+  validPick=null;
+  document.getElementById("ctxFlag").textContent=`Context ${ci+1} of 3`;
+  document.getElementById("ctxQ").textContent=ctx.q;
+  document.getElementById("ctxC").textContent=ctx.c;
+
+  const list=document.getElementById("claimList");
+  list.innerHTML=ctx.claims.map((cl,i)=>`
+    <div class="claim">
+      <div class="ct">${cl.t}</div>
+      <div class="toggle">
+        <button class="tg" data-i="${i}" data-v="ok" onclick="setPick(${i},'ok',this)">Licensed here</button>
+        <button class="tg" data-i="${i}" data-v="over" onclick="setPick(${i},'over',this)">Over-reach</button>
+      </div>
+      <div class="verdict-tag" id="vt${i}"></div>
+    </div>`).join("");
+
+  const vo=document.getElementById("validOpts");
+  vo.innerHTML=VALID_OPTS.map(o=>`<button class="vopt" onclick="setValid('${o}',this)">${o}</button>`).join("");
+
+  document.getElementById("ctxFeedback").classList.remove("show");
+  document.getElementById("ctxFeedback").innerHTML="";
+  document.getElementById("ctxNextWrap").style.display="none";
+  document.getElementById("checkBtn").disabled=true;
+  document.getElementById("ctxNext").textContent = ci<2 ? "Next context" : "See all three findings";
+  updateCtxProgress();
+}
+
+function setPick(i,v,btn){
+  picks[i]=v;
+  const row=btn.parentElement;
+  [...row.children].forEach(b=>b.classList.remove("sel-ok","sel-over"));
+  btn.classList.add(v==="ok"?"sel-ok":"sel-over");
+  updateCtxProgress();
+}
+function setValid(o,btn){
+  validPick=o;
+  [...btn.parentElement.children].forEach(b=>b.classList.remove("sel"));
+  btn.classList.add("sel");
+  updateCtxProgress();
+}
+function updateCtxProgress(){
+  const done=picks.filter(Boolean).length;
+  const total=CONTEXTS[ci].claims.length;
+  const ready=done===total && validPick;
+  document.getElementById("checkBtn").disabled=!ready;
+  document.getElementById("ctxProgress").textContent= ready ? "Ready" : `${done} of ${total} claims set${validPick?"":" · validatability not set"}`;
+}
+
+function checkContext(){
+  const ctx=CONTEXTS[ci];
+  ctx.claims.forEach((cl,i)=>{
+    const intended=cl.ok?"ok":"over";
+    const tag=document.getElementById("vt"+i);
+    const agree=picks[i]===intended;
+    const label=cl.ok?"Licensed inference":"Over-reach";
+    tag.innerHTML=`<span class="mark ${cl.ok?'ok':'over'}">${label}.</span> ${cl.why} ${agree?"":'<span class="note">(You read it the other way — worth sitting with which reading you trust and why.)</span>'}`;
+    tag.classList.add("show");
+  });
+  const fb=document.getElementById("ctxFeedback");
+  const vWrong = validPick!==ctx.valid.ans;
+  fb.innerHTML=`<div class="ftag">Context ${ci+1} · the construct and the trap</div>
+    <p>${ctx.feedback}</p>
+    <p><b>Validatable?</b> ${ctx.valid.ans}. ${ctx.valid.why}${vWrong?` <span style="color:var(--ochre-soft)">(You chose "${validPick}.")</span>`:""}</p>`;
+  fb.classList.add("show");
+  document.getElementById("checkBtn").disabled=true;
+  document.getElementById("ctxNextWrap").style.display="flex";
+  document.getElementById("ctxNext").scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function nextContext(){
+  if(ci<2){ ci++; go("context"); renderContext(); }
+  else { go("payoff"); }
+}
+
+/* ---------- RESET ---------- */
+function resetAll(){ ci=0; picks=[]; validPick=null; }
+
+paintRail(0);
+</script>
+</body>
+</html>

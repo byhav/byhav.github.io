@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where Did the Inference Happen?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3ecdf;
+    --paper-2:#ece2d0;
+    --ink:#23201a;
+    --ink-soft:#5b5347;
+    --rule:#cdc1aa;
+    --ochre:#a7682b;
+    --ochre-soft:#c89154;
+    --teal:#2f5d57;
+    --alarm:#9d3b2f;
+    --card:#fbf7ee;
+    --shadow:0 1px 0 rgba(35,32,26,.04), 0 14px 30px -18px rgba(35,32,26,.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(200,145,84,.10), transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    font-family:"Spectral",Georgia,serif;
+    font-size:20px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:42px 26px 90px;}
+  .kicker{
+    font-family:"Spectral",serif;
+    text-transform:uppercase;
+    letter-spacing:.22em;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ochre);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:"Fraunces",serif;
+    font-weight:600;
+    font-size:clamp(30px,5.4vw,46px);
+    line-height:1.05;
+    letter-spacing:-.01em;
+    margin:0 0 18px;
+  }
+  h2{
+    font-family:"Fraunces",serif;
+    font-weight:600;
+    font-size:clamp(23px,3.6vw,30px);
+    line-height:1.12;
+    margin:0 0 14px;
+  }
+  p{margin:0 0 16px;}
+  .lede{font-size:23px;color:var(--ink-soft);}
+  .step-flag{
+    font-family:"Spectral",serif;
+    font-size:14px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--ink-soft);font-weight:600;margin-bottom:10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .step-flag::after{content:"";flex:1;height:1px;background:var(--rule);}
+  .phase{display:none;animation:rise .5s ease both;}
+  .phase.active{display:block;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  /* buttons */
+  .btn{
+    font-family:"Spectral",serif;font-size:18px;font-weight:600;
+    background:var(--ink);color:var(--paper);border:none;border-radius:2px;
+    padding:13px 22px;cursor:pointer;letter-spacing:.02em;
+    transition:transform .15s ease, background .2s ease;
+  }
+  .btn:hover{background:#000;transform:translateY(-1px);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink);}
+  .btn.ghost:hover{background:var(--ink);color:var(--paper);}
+  .actions{margin-top:28px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+
+  /* excerpt card */
+  .excerpt{
+    background:var(--card);border:1px solid var(--rule);border-radius:4px;
+    box-shadow:var(--shadow);padding:24px 24px 20px;margin-bottom:18px;
+    position:relative;
+  }
+  .excerpt .num{
+    position:absolute;top:-12px;left:20px;background:var(--ochre);color:var(--paper);
+    font-family:"Fraunces",serif;font-weight:600;font-size:13px;
+    width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  }
+  .quote{font-size:22px;font-style:italic;color:var(--ink);margin:6px 0 18px;}
+  .codebar{display:flex;gap:8px;flex-wrap:wrap;}
+  .codebtn{
+    font-family:"Spectral",serif;font-size:16px;font-weight:500;
+    background:var(--paper-2);border:1.5px solid var(--rule);color:var(--ink-soft);
+    border-radius:2px;padding:8px 13px;cursor:pointer;transition:all .15s ease;
+  }
+  .codebtn:hover{border-color:var(--ochre);color:var(--ink);}
+  .codebtn.sel{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+  /* legend */
+  .legend{
+    background:var(--paper-2);border:1px dashed var(--rule);border-radius:4px;
+    padding:16px 18px;margin:0 0 26px;font-size:17px;
+  }
+  .legend ul{margin:8px 0 0;padding:0 0 0 2px;list-style:none;}
+  .legend li{margin:0 0 6px;padding-left:16px;position:relative;}
+  .legend li::before{content:"—";position:absolute;left:0;color:var(--ochre);}
+  .legend b{font-weight:600;color:var(--ink);}
+
+  /* tally */
+  .tally{margin-top:6px;}
+  .tally-row{display:flex;align-items:center;gap:12px;margin-bottom:11px;}
+  .tally-label{font-size:16px;width:160px;flex-shrink:0;color:var(--ink-soft);font-weight:500;}
+  .tally-track{flex:1;height:22px;background:var(--paper-2);border:1px solid var(--rule);border-radius:2px;overflow:hidden;}
+  .tally-fill{height:100%;width:0;background:var(--teal);transition:width .5s cubic-bezier(.2,.7,.2,1);}
+  .tally-fill.b{background:var(--ochre);}
+  .tally-count{font-family:"Fraunces",serif;font-weight:600;width:20px;text-align:right;}
+
+  textarea{
+    width:100%;font-family:"Spectral",serif;font-size:19px;color:var(--ink);
+    background:var(--card);border:1.5px solid var(--rule);border-radius:3px;
+    padding:14px;resize:vertical;min-height:88px;line-height:1.5;
+  }
+  textarea:focus{outline:none;border-color:var(--ochre);}
+
+  /* compare */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:22px 0;}
+  @media(max-width:620px){.compare{grid-template-columns:1fr;}}
+  .col-head{font-family:"Spectral",serif;text-transform:uppercase;letter-spacing:.14em;font-size:13.5px;font-weight:600;margin-bottom:10px;color:var(--ink-soft);}
+  .col-head.you{color:var(--teal);}
+  .col-head.them{color:var(--ochre);}
+
+  .amb{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;margin-bottom:16px;}
+  .amb .aq{font-style:italic;font-size:18px;margin-bottom:12px;}
+  .amb .codes{display:flex;gap:18px;font-size:16px;flex-wrap:wrap;}
+  .amb .codes span b{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:2px;}
+  .you-code{color:var(--teal);font-weight:600;}
+  .them-code{color:var(--ochre);font-weight:600;}
+  .why{font-size:16px;color:var(--ink-soft);margin-top:10px;padding-top:10px;border-top:1px solid var(--rule);}
+
+  .verdict{
+    background:var(--card);border-left:4px solid var(--alarm);
+    padding:18px 20px;margin:24px 0;border-radius:0 4px 4px 0;
+  }
+  .verdict b{color:var(--alarm);}
+
+  .pull{
+    background:var(--ink);color:var(--paper);border-radius:4px;
+    padding:28px 26px;margin:26px 0;
+  }
+  .pull .src{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--ochre-soft);margin-bottom:12px;font-weight:600;}
+  .pull p{font-family:"Fraunces",serif;font-size:24px;line-height:1.4;margin:0;}
+
+  .feedback{
+    background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;
+    padding:18px 20px;margin-top:18px;display:none;animation:rise .4s ease both;
+  }
+  .feedback.show{display:block;}
+  .feedback .ftag{font-size:13.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ochre);font-weight:600;margin-bottom:8px;}
+
+  .dot-rail{display:flex;gap:7px;margin:0 0 30px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--rule);}
+  .dot.on{background:var(--ochre);}
+  .note{font-size:16px;color:var(--ink-soft);font-style:italic;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dot-rail" id="rail"></div>
+
+  <!-- PHASE 0: INTRO -->
+  <section class="phase active" data-phase="intro">
+    <p class="kicker">Qualitative Methods · Content Analysis</p>
+    <h1>Where Did the Inference Happen?</h1>
+    <p class="lede">You're about to code a small set of interview excerpts, count the results, and state a finding. It takes about ten minutes. There are no points and no wrong path through it.</p>
+    <p>The data come from a study of women describing their lives after breast cancer treatment. Your job is the ordinary work of qualitative content analysis: read each excerpt, decide which coping category it belongs to, and let the tally add up.</p>
+    <div class="actions">
+      <button class="btn" onclick="go('coding')">Begin coding</button>
+    </div>
+  </section>
+
+  <!-- PHASE 1: CODING -->
+  <section class="phase" data-phase="coding">
+    <div class="step-flag">Step 1 · Code the excerpts</div>
+    <h2>Assign each excerpt to one category</h2>
+    <div class="legend">
+      <b>Coping categories</b>
+      <ul>
+        <li><b>Information-seeking</b> — gathering facts about the illness or treatment</li>
+        <li><b>Social support</b> — drawing on other people for help or presence</li>
+        <li><b>Meaning-making</b> — reframing the illness within a larger sense of self or life</li>
+        <li><b>Avoidance</b> — turning attention away from the illness</li>
+      </ul>
+    </div>
+    <div id="excerpts"></div>
+
+    <div class="tally" id="liveTally" style="margin-top:26px;"></div>
+
+    <div class="actions">
+      <button class="btn" id="toFinding" disabled onclick="go('finding')">See my results</button>
+      <span class="note" id="codeProgress">0 of 6 coded</span>
+    </div>
+  </section>
+
+  <!-- PHASE 2: FINDING -->
+  <section class="phase" data-phase="finding">
+    <div class="step-flag">Step 2 · State your finding</div>
+    <h2>Here is what your coding produced</h2>
+    <div class="tally" id="finalTally"></div>
+    <p style="margin-top:24px;">Looking at your own counts, write the finding you would report in one sentence — the kind of line that would open the results section of a paper.</p>
+    <textarea id="findingText" placeholder="In this sample, the dominant coping strategy was…"></textarea>
+    <div class="actions">
+      <button class="btn" id="commitFinding" disabled onclick="go('disruption')">This is my finding</button>
+      <span class="note" id="findingNote">Write a sentence to continue</span>
+    </div>
+  </section>
+
+  <!-- PHASE 3: DISRUPTION -->
+  <section class="phase" data-phase="disruption">
+    <div class="step-flag">Step 3 · A second coder</div>
+    <h2>Same six excerpts. Same four categories. Same instructions.</h2>
+    <p>A second trained coder worked through the identical material with the identical procedure you used. On the clear-cut excerpts you agreed. On three of them, you didn't — and each of their readings is as defensible as yours.</p>
+    <div id="ambList"></div>
+
+    <h2 style="margin-top:34px;">What that did to the counts</h2>
+    <div class="compare">
+      <div>
+        <div class="col-head you">Your coding</div>
+        <div class="tally" id="cmpYou"></div>
+      </div>
+      <div>
+        <div class="col-head them">Second coder</div>
+        <div class="tally" id="cmpThem"></div>
+      </div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="actions">
+      <button class="btn" onclick="go('reflection')">Continue</button>
+    </div>
+  </section>
+
+  <!-- PHASE 4: REFLECTION -->
+  <section class="phase" data-phase="reflection">
+    <div class="step-flag">Step 4 · Look at one decision</div>
+    <h2>Go back to a single excerpt</h2>
+    <div class="excerpt" style="margin-top:8px;">
+      <div class="quote" id="reflectQuote"></div>
+      <div class="note">You coded this as <span class="you-code" id="reflectCode"></span>.</div>
+    </div>
+    <p>Before you counted anything, you had already decided this excerpt <i>meant</i> coping-of-a-certain-kind. Name the move: what did you have to assume about this person to place her where you did?</p>
+    <textarea id="reflectText" placeholder="I assumed that…"></textarea>
+    <div class="actions">
+      <button class="btn" id="revealReflect" disabled onclick="revealReflection()">Reveal</button>
+      <span class="note" id="reflectNote">Write a sentence to continue</span>
+    </div>
+    <div class="feedback" id="reflectFeedback">
+      <div class="ftag">The point</div>
+      <p style="margin:0;">The leap from <i>these words</i> to <i>this means coping-through-X</i> happened right here, in this one decision — not in the chart. By the time you reached the tally, every interpretive act was already behind you. The count didn't infer anything. It added up inferences you had already made, one click at a time.</p>
+    </div>
+    <div class="actions" id="reflectNext" style="display:none;">
+      <button class="btn" onclick="go('krippendorff')">Continue</button>
+    </div>
+  </section>
+
+  <!-- PHASE 5: KRIPPENDORFF -->
+  <section class="phase" data-phase="krippendorff">
+    <div class="step-flag">Step 5 · The point, named</div>
+    <h2>Krippendorff saw this coming</h2>
+    <p>Writing about a study built exactly like this one — patients interviewed about coping after treatment — he noted that the real interpretive work was done while coding, and that the frequencies that followed did nothing more than summarize judgments already made.</p>
+    <div class="pull">
+      <div class="src">Krippendorff · Conceptual Foundation</div>
+      <p>The qualitative inferences were made during coding. The frequencies only summarized them.</p>
+    </div>
+    <p>And the sharper corollary: rerunning the count can only tell you whether your tally is <i>reliable</i>. It can never tell you whether the inference is <i>right</i>. You and the second coder could both recount to the same number and still have confirmed nothing about what that number means.</p>
+    <div class="actions">
+      <button class="btn" onclick="go('bridge')">So what governed the coding?</button>
+    </div>
+  </section>
+
+  <!-- PHASE 6: BRIDGE -->
+  <section class="phase" data-phase="bridge">
+    <div class="step-flag">Where this goes next</div>
+    <h2>Every code you assigned rested on something</h2>
+    <p>When you placed an excerpt, you were answering a quiet question: <i>what is this person's account about, and what am I trying to learn from it?</i> The two of you diverged because you were, without saying so, reading toward slightly different questions. Change that question and the codes move with it.</p>
+    <p>That quiet question has a name in Krippendorff's framework: the <b>context</b> and the <b>research question</b>. They were governing your coding the whole time, even when they stayed unspoken.</p>
+    <p class="lede" style="margin-top:24px;">In the next activity you'll make that machinery visible. One text, three research questions, three contexts — and three findings that are all valid and all different.</p>
+    <div class="actions">
+      <button class="btn ghost" onclick="go('intro');reset()">Run it again</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------- DATA ---------- */
+const CATS = ["Information-seeking","Social support","Meaning-making","Avoidance"];
+const EXCERPTS = [
+  { id:0, text:"After the diagnosis I read everything I could find. I wanted to understand exactly what the treatment would do and what the odds were. Knowing the details made me feel less like the ground was moving under me.", clear:true },
+  { id:1, text:"My sister moved in for the first two months. I don't know what I would have done without people around me — just having someone in the next room while I slept.", clear:true },
+  { id:2, text:"I decided early on I wasn't going to let it define me. I kept going to work, kept my routines. People said I was in denial, but I think I just refused to make it the center of everything.",
+    clear:false, you:"Meaning-making", them:"Avoidance",
+    why:"Read as identity work — refusing to be reduced to the illness — it's meaning-making. Read as turning attention away by staying busy, it's avoidance. The patient herself names the tension." },
+  { id:3, text:"The support group changed how I saw the whole thing. Hearing other women talk, I started to understand my own experience differently, like it was part of something bigger than just me.",
+    clear:false, you:"Social support", them:"Meaning-making",
+    why:"The source of the shift is other people, which reads as social support. But what shifted was her interpretation of the experience, which reads as meaning-making. The two are tangled in one sentence." },
+  { id:4, text:"I started thinking about what actually mattered to me. The illness stripped away a lot of noise. In a strange way I know myself better now than before.", clear:true },
+  { id:5, text:"I told the doctors to give me only what I absolutely needed to know. Too much detail and I'd spiral. So I'd ask one question at a time, just enough to get through the next step.",
+    clear:false, you:"Avoidance", them:"Information-seeking",
+    why:"Limiting what she lets in reads as avoidance. But asking one targeted question at a time, enough to act, is a controlled form of information-seeking. Same behavior, two names." }
+];
+/* For clear excerpts, the 'agreed' code both coders share: */
+const CLEAR_CODE = {0:"Information-seeking",1:"Social support",4:"Meaning-making"};
+
+/* ---------- STATE ---------- */
+let codes = {};            // student's choices  id -> category
+const PHASES = ["intro","coding","finding","disruption","reflection","krippendorff","bridge"];
+
+/* ---------- RAIL ---------- */
+const rail = document.getElementById("rail");
+PHASES.forEach(()=>{const d=document.createElement("div");d.className="dot";rail.appendChild(d);});
+function paintRail(name){
+  const i = PHASES.indexOf(name);
+  [...rail.children].forEach((d,idx)=>d.classList.toggle("on",idx<=i));
+}
+
+/* ---------- NAV ---------- */
+function go(name){
+  document.querySelectorAll(".phase").forEach(p=>p.classList.toggle("active",p.dataset.phase===name));
+  paintRail(name);
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(name==="finding") buildFinalTally();
+  if(name==="disruption") buildDisruption();
+  if(name==="reflection") buildReflection();
+}
+
+/* ---------- BUILD CODING ---------- */
+const exWrap = document.getElementById("excerpts");
+EXCERPTS.forEach(ex=>{
+  const card=document.createElement("div");
+  card.className="excerpt";
+  card.innerHTML=`<div class="num">${ex.id+1}</div>
+    <div class="quote">${ex.text}</div>
+    <div class="codebar" data-ex="${ex.id}">
+      ${CATS.map(c=>`<button class="codebtn" onclick="pick(${ex.id},'${c}',this)">${c}</button>`).join("")}
+    </div>`;
+  exWrap.appendChild(card);
+});
+
+function pick(id,cat,btn){
+  codes[id]=cat;
+  const bar=btn.parentElement;
+  [...bar.children].forEach(b=>b.classList.remove("sel"));
+  btn.classList.add("sel");
+  updateLiveTally();
+  const n=Object.keys(codes).length;
+  document.getElementById("codeProgress").textContent=`${n} of 6 coded`;
+  document.getElementById("toFinding").disabled = n<6;
+}
+
+/* ---------- TALLY HELPERS ---------- */
+function countFrom(map){
+  const c={}; CATS.forEach(x=>c[x]=0);
+  Object.values(map).forEach(v=>c[v]++);
+  return c;
+}
+function renderTally(el,counts,variant){
+  const max=Math.max(1,...Object.values(counts));
+  el.innerHTML=CATS.map(cat=>{
+    const v=counts[cat]||0;
+    const w=(v/max)*100;
+    return `<div class="tally-row">
+      <div class="tally-label">${cat}</div>
+      <div class="tally-track"><div class="tally-fill ${variant==='b'?'b':''}" style="width:${w}%"></div></div>
+      <div class="tally-count">${v}</div>
+    </div>`;
+  }).join("");
+}
+const liveEl=document.getElementById("liveTally");
+function updateLiveTally(){ renderTally(liveEl,countFrom(codes)); }
+updateLiveTally();
+
+function buildFinalTally(){ renderTally(document.getElementById("finalTally"),countFrom(codes)); }
+
+/* ---------- FINDING TEXT GATE ---------- */
+const findingText=document.getElementById("findingText");
+findingText.addEventListener("input",()=>{
+  const ok=findingText.value.trim().length>4;
+  document.getElementById("commitFinding").disabled=!ok;
+  document.getElementById("findingNote").textContent= ok?"Ready":"Write a sentence to continue";
+});
+
+/* ---------- SECOND CODER ---------- */
+function secondCoderMap(){
+  // same clear codes; flip the ambiguous ones to the alternative reading
+  const m={};
+  EXCERPTS.forEach(ex=>{
+    if(ex.clear){ m[ex.id]=codes[ex.id]; }   // agreement on clear items
+    else { m[ex.id]=ex.them; }               // divergence on ambiguous items
+  });
+  return m;
+}
+function dominant(counts){
+  let best=null,bv=-1,tie=false;
+  CATS.forEach(c=>{ if(counts[c]>bv){bv=counts[c];best=c;tie=false;} else if(counts[c]===bv){tie=true;} });
+  return {cat:best,val:bv,tie};
+}
+function buildDisruption(){
+  const amb=document.getElementById("ambList");
+  amb.innerHTML=EXCERPTS.filter(e=>!e.clear).map(ex=>`
+    <div class="amb">
+      <div class="aq">"${ex.text}"</div>
+      <div class="codes">
+        <span><b>You coded</b><span class="you-code">${codes[ex.id]||"—"}</span></span>
+        <span><b>Second coder</b><span class="them-code">${ex.them}</span></span>
+      </div>
+      <div class="why">${ex.why}</div>
+    </div>`).join("");
+
+  const you=countFrom(codes);
+  const them=countFrom(secondCoderMap());
+  renderTally(document.getElementById("cmpYou"),you);
+  renderTally(document.getElementById("cmpThem"),them,"b");
+
+  const dy=dominant(you), dt=dominant(them);
+  const v=document.getElementById("verdict");
+  if(dy.cat!==dt.cat || dy.tie || dt.tie){
+    v.innerHTML=`Your finding pointed to <b>${dy.tie?"a tie at the top":dy.cat}</b>. Under an equally valid coding, the result points to <b>${dt.tie?"a different tie":dt.cat}</b>. The text didn't change. The procedure didn't change. Only the judgment at the moment of coding changed — and the finding moved with it.`;
+  } else {
+    v.innerHTML=`This time the top category held — but look at the shifted counts. The same words, coded by the same rules, produced different numbers. The "finding" was never sitting in the text waiting to be counted; it rode on the coding decisions, and those were yours to make.`;
+  }
+}
+
+/* ---------- REFLECTION ---------- */
+function buildReflection(){
+  // use excerpt 2 (the work/routines one) as the reflection anchor
+  const ex=EXCERPTS[2];
+  document.getElementById("reflectQuote").textContent=`"${ex.text}"`;
+  document.getElementById("reflectCode").textContent=codes[2]||"—";
+}
+const reflectText=document.getElementById("reflectText");
+reflectText.addEventListener("input",()=>{
+  const ok=reflectText.value.trim().length>4;
+  document.getElementById("revealReflect").disabled=!ok;
+  document.getElementById("reflectNote").textContent= ok?"Ready":"Write a sentence to continue";
+});
+function revealReflection(){
+  document.getElementById("reflectFeedback").classList.add("show");
+  document.getElementById("reflectNext").style.display="flex";
+  document.getElementById("revealReflect").disabled=true;
+}
+
+/* ---------- RESET ---------- */
+function reset(){
+  codes={};
+  document.querySelectorAll(".codebtn.sel").forEach(b=>b.classList.remove("sel"));
+  document.getElementById("toFinding").disabled=true;
+  document.getElementById("codeProgress").textContent="0 of 6 coded";
+  findingText.value=""; document.getElementById("commitFinding").disabled=true;
+  document.getElementById("findingNote").textContent="Write a sentence to continue";
+  reflectText.value=""; document.getElementById("revealReflect").disabled=true;
+  document.getElementById("reflectNote").textContent="Write a sentence to continue";
+  document.getElementById("reflectFeedback").classList.remove("show");
+  document.getElementById("reflectNext").style.display="none";
+  updateLiveTally();
+}
+
+paintRail("intro");
+</script>
+</body>
+</html>
